@@ -1,1 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Weather</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to top right, #3b8d99, #6b8e23);
+            color: white;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: background-image 1s ease-in-out;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            font-size: 28px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            width: 99%;
+            position: center;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        header img {
+            width: 60px;
+            height: 60px;
+            margin-right: 10px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .start-button {
+            margin: 50px auto;
+            padding: 18px 40px;
+            font-size: 22px;
+            background-color: #ff6347;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, background-color 0.3s ease-in-out;
+            animation: pulse 1.5s infinite;
+        }
+
+        .start-button:hover {
+            background-color: #e55347;
+            transform: translateY(-5px);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .city-buttons {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            z-index: 1;
+        }
+
+        .city-buttons button {
+            background-color: #2b8cc4;
+            border: none;
+            color: white;
+            padding: 18px 40px;
+            margin: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background-color 0.3s, transform 0.3s;
+            width: 220px;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .city-buttons button:hover {
+            background-color: #0075a3;
+            transform: translateY(-3px);
+        }
+
+        .loading {
+            font-size: 20px;
+            margin: 20px 0;
+            display: none;
+            color: #FFD700;
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+
+        .weather-info {
+            margin-top: 10px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: none;
+            font-size: 26px;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .weather-info img {
+            width: 120px;
+            height: 120px;
+            margin: 15px 0;
+        }
+
+        .city-name {
+            color: #000505;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .temperature, .description, .wind-speed {
+            color: #011c37;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .background {
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="logo.png" alt="Logo">
+        <span>Weather Application</span>
+    </header>
+
+    <div class="container">
+        <!-- Weather information will appear here -->
+        <div id="weather-info" class="weather-info">
+            <h2 id="city-name" class="city-name"></h2>
+            <img id="weather-icon" alt="Weather Icon">
+            <p id="temperature" class="temperature"></p>
+            <p id="description" class="description"></p>
+            <p id="wind-speed" class="wind-speed"></p>
+        </div>
+
+        <button class="start-button" onclick="showCities()">Check Weather</button>
+
+        <div class="city-buttons" id="city-buttons">
+            <button onclick="fetchWeather('New York')">New York</button>
+            <button onclick="fetchWeather('London')">London</button>
+            <button onclick="fetchWeather('Tokyo')">Tokyo</button>
+            <button onclick="fetchWeather('Colombo')">Colombo</button>
+            <button onclick="fetchWeather('Dubai')">Dubai</button>
+        </div>
+
+        <div id="loading" class="loading">Loading<span>.</span><span>.</span><span>.</span></div>
+    </div>
+
+    <script>
+        const apiKey = 'aea6ce13b106b4331975530f5e6a119a'; // Replace with your OpenWeatherMap API key
+
+        function showCities() {
+            document.querySelector('.start-button').style.display = 'none';
+            document.getElementById('city-buttons').style.display = 'flex';
+        }
+
+        async function fetchWeather(city) {
+            const backgrounds = {
+                'New York': 'url(newyork.jpg)',
+                'London': 'url(london.jpg)',
+                'Tokyo': 'url(tokyo.jpg)',
+                'Colombo': 'url(colombo.jpg)',
+                'Dubai': 'url(dubai.jpg)'
+            };
+        
+            // Set the background image for the body
+            document.body.style.backgroundImage = backgrounds[city];
+            document.body.style.backgroundSize = 'cover';   // Ensure the image covers the entire window
+            document.body.style.backgroundPosition = 'center';  // Keep it centered
+        
+            // Other code remains the same
+            const loading = document.getElementById('loading');
+            const weatherInfo = document.getElementById('weather-info');
+            loading.style.display = 'block';
+            weatherInfo.style.display = 'none';
+        
+            try {
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                displayWeather(data);
+            } catch (error) {
+                alert(`Error fetching weather data: ${error.message}`);
+                console.error(error);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        
+        function displayWeather(data) {
+            const weatherInfo = document.getElementById('weather-info');
+            const cityName = document.getElementById('city-name');
+            const weatherIcon = document.getElementById('weather-icon');
+            const temperature = document.getElementById('temperature');
+            const description = document.getElementById('description');
+            const windSpeed = document.getElementById('wind-speed');
+        
+            if (data && data.weather && data.weather[0]) {
+                cityName.textContent = data.name;
+                weatherIcon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+                weatherIcon.alt = data.weather[0].description;
+                temperature.textContent = `Temperature: ${data.main.temp}°C`;
+                description.textContent = `Weather: ${data.weather[0].description}`;
+                windSpeed.textContent = `Wind Speed: ${data.wind.speed} m/s`;
+        
+                weatherInfo.style.opacity = '0';
+                weatherInfo.style.transform = 'translateY(-20px)';
+                weatherInfo.style.display = 'block';
+        
+                setTimeout(() => {
+                    weatherInfo.style.opacity = '1';
+                    weatherInfo.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                alert('Unexpected data format received from the API.');
+            }
+        }
+        
+    </script>
+</body>
+</html>
 
